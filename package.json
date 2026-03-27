@@ -15,12 +15,12 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.18.2",
     "multer": "^2.0.2",
-    "path": "^0.12.7",    
+    "path": "^0.12.7",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "module"
 }
