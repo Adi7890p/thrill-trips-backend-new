@@ -17,18 +17,33 @@ import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, Go
 import Owner from './models/Owner.js';
 import Notification from './models/Notification.js';
 
-const JWT_SECRET = "Om_Namh_Shivay_Har_Har_Mahadev";
-const app = express();
 import http from 'http';
 import { Server } from 'socket.io';
 
+const JWT_SECRET = "Om_Namh_Shivay_Har_Har_Mahadev";
+
+const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
+const io = new Server(server, { 
+    cors: { 
+        origin: '*',
+        methods: ["GET", "POST"]
+    },
+    transports: ['websocket', 'polling'],
+    allowEIO3: true
+});
 app.set('io', io);
 
 io.on('connection', (socket) => {
-    socket.on('join_admin', () => { socket.join('admin_room'); });
-    socket.on('join_owner', (ownerId) => { socket.join(`owner_${ownerId}`); }); // ownerId here is ownerEmail
+    console.log('Client connected through WebSockets/Polling');
+    socket.on('join_admin', () => { 
+        console.log('Admin joined');
+        socket.join('admin_room'); 
+    });
+    socket.on('join_owner', (ownerId) => { 
+        console.log(`Owner joined: ${ownerId}`);
+        socket.join(`owner_${ownerId}`); 
+    });
 });
 
 app.use(express.json());
@@ -678,4 +693,5 @@ app.get('/admin/dashboard-data', async (req, res) => {
     }
 });
 
-server.listen(5000, () => console.log('Server running on port 5000 w/ WebSockets'));
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`Server running on port ${PORT} w/ WebSockets`));
