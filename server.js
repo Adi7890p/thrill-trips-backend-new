@@ -697,11 +697,4 @@ app.get('/admin/dashboard-data', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-<<<<<<< HEAD
 server.listen(PORT, () => console.log(`Server running on port ${PORT} w/ WebSockets`));
-=======
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
->>>>>>> edb698d6f57759aecfd97e250b8d75aabbf56c8b
