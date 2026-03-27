@@ -26,7 +26,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { 
     cors: { 
-        origin: '*',
+        origin: ["https://thrill-trips.netlify.app", "http://localhost:5173"],
         methods: ["GET", "POST"],
         credentials: true
     },
@@ -47,7 +47,10 @@ io.on('connection', (socket) => {
 });
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: ["https://thrill-trips.netlify.app", "http://localhost:5173"],
+    credentials: true
+}));
 app.use((req, res, next) => {
     res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
     next();
