@@ -24,8 +24,8 @@ const JWT_SECRET = "Om_Namh_Shivay_Har_Har_Mahadev";
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { 
-    cors: { 
+const io = new Server(server, {
+    cors: {
         origin: (origin, callback) => callback(null, true),
         methods: ["GET", "POST"],
         credentials: true
@@ -36,13 +36,13 @@ app.set('io', io);
 
 io.on('connection', (socket) => {
     console.log('Client connected through WebSockets/Polling');
-    socket.on('join_admin', () => { 
+    socket.on('join_admin', () => {
         console.log('Admin joined');
-        socket.join('admin_room'); 
+        socket.join('admin_room');
     });
-    socket.on('join_owner', (ownerId) => { 
+    socket.on('join_owner', (ownerId) => {
         console.log(`Owner joined: ${ownerId}`);
-        socket.join(`owner_${ownerId}`); 
+        socket.join(`owner_${ownerId}`);
     });
 });
 
@@ -319,22 +319,22 @@ app.post("/book", async (req, res) => {
         await newBooking.save();
 
         const io = req.app.get('io');
-        
+
         const park = await Park.findOne({ pid });
         if (park && park.owner) {
-             const ownerDoc = await Owner.findById(park.owner);
-             if (ownerDoc) {
-                 const notif = new Notification({
-                     owner: ownerDoc.email,
-                     title: "New Booking Received",
-                     message: `Your park '${park.pname}' received a booking for ${persons} person(s) on ${date}. Total Payment: ₹${bill}.`,
-                     park: park
-                 });
-                 await notif.save();
-                 io.to(`owner_${ownerDoc.email}`).emit('new_booking_notification', notif);
-             }
+            const ownerDoc = await Owner.findById(park.owner);
+            if (ownerDoc) {
+                const notif = new Notification({
+                    owner: ownerDoc.email,
+                    title: "New Booking Received",
+                    message: `Your park '${park.pname}' received a booking for ${persons} person(s) on ${date}. Total Payment: ₹${bill}.`,
+                    park: park
+                });
+                await notif.save();
+                io.to(`owner_${ownerDoc.email}`).emit('new_booking_notification', notif);
+            }
         }
-        
+
         io.to('admin_room').emit('new_booking_admin', newBooking);
 
         res.json({ success: true, message: "Booking confirmed" });
@@ -368,7 +368,7 @@ app.get("/bookings/:username", async (req, res) => {
             { $lookup: { from: "users", localField: "username", foreignField: "username", as: "user" } },
             { $unwind: "$park" },
             { $unwind: "$user" }
-        ])
+        ]).sort({ _id: -1 });
         res.json(bookings);
     } catch (err) {
         res.status(500).json({ message: "Server error" });
@@ -512,7 +512,7 @@ app.post("/owner/addpark", upload.fields([{ name: "parkImage", maxCount: 1 }, { 
         if (!ownerDoc) {
             return res.json({ success: false, message: "Owner not found" });
         }
-        
+
         let finalAccount = accountNumber || ownerDoc.accountNumber;
         if (accountNumber && !ownerDoc.accountNumber) {
             ownerDoc.accountNumber = accountNumber;
@@ -527,7 +527,7 @@ app.post("/owner/addpark", upload.fields([{ name: "parkImage", maxCount: 1 }, { 
         const emitPark = newpark.toObject();
         emitPark.ownerEmail = ownerDoc.email;
         if (!emitPark.accountNumber && finalAccount) emitPark.accountNumber = finalAccount; // Complete override
-        
+
         const io = req.app.get('io');
         io.to('admin_room').emit('new_park_request', emitPark);
 
@@ -555,7 +555,7 @@ app.get('/owner/data/:email', async (req, res) => {
         // Calculate Stats
         let totalRevenue = 0;
         let todaysBookings = 0;
-        
+
         const now = new Date();
         const dd = String(now.getDate()).padStart(2, '0');
         const mm = String(now.getMonth() + 1).padStart(2, '0');
@@ -563,23 +563,23 @@ app.get('/owner/data/:email', async (req, res) => {
         const todayStr = `${dd}-${mm}-${yyyy}`;
 
         bookings.forEach(b => {
-             const addonsStr = String(b.addons || "").toLowerCase();
-             let addonAmt = 0;
-             if (addonsStr.includes('express pass')) addonAmt += 250;
-             if (addonsStr.includes('meal pass')) addonAmt += 180;
-             if (addonsStr.includes('locker pass')) addonAmt += 100;
-             
-             let basePrice = Number(b.bill || 0) - addonAmt;
-             if(basePrice < 0) basePrice = 0;
-             totalRevenue += (basePrice * 0.90) + (addonAmt * 0.40);
+            const addonsStr = String(b.addons || "").toLowerCase();
+            let addonAmt = 0;
+            if (addonsStr.includes('express pass')) addonAmt += 250;
+            if (addonsStr.includes('meal pass')) addonAmt += 180;
+            if (addonsStr.includes('locker pass')) addonAmt += 100;
 
-             if (b.date === todayStr) {
-                  todaysBookings++;
-             }
+            let basePrice = Number(b.bill || 0) - addonAmt;
+            if (basePrice < 0) basePrice = 0;
+            totalRevenue += (basePrice * 0.90) + (addonAmt * 0.40);
+
+            if (b.date === todayStr) {
+                todaysBookings++;
+            }
         });
 
         res.json({ success: true, parks, bookings, stats: { totalRevenue, todaysBookings } });
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         res.json({ success: false, message: err });
     }
@@ -622,7 +622,7 @@ app.get('/admin/parks/pending', async (req, res) => {
                         parkObj.ownerEmail = ownerDoc.email;
                         if (!parkObj.accountNumber) parkObj.accountNumber = ownerDoc.accountNumber;
                     }
-                } catch(e) {}
+                } catch (e) { }
             }
             return parkObj;
         }));
@@ -663,33 +663,33 @@ app.get('/admin/dashboard-data', async (req, res) => {
 
         let totalRevenue = 0;
         bookings.forEach(b => {
-             const addonsStr = String(b.addons || "").toLowerCase();
-             let addonAmt = 0;
-             if (addonsStr.includes('express pass')) addonAmt += 250;
-             if (addonsStr.includes('meal pass')) addonAmt += 180;
-             if (addonsStr.includes('locker pass')) addonAmt += 100;
-             
-             let basePrice = Number(b.bill || 0) - addonAmt;
-             if(basePrice < 0) basePrice = 0;
-             // Admin gets 10% of base and 60% of addons
-             totalRevenue += (basePrice * 0.10) + (addonAmt * 0.60);
+            const addonsStr = String(b.addons || "").toLowerCase();
+            let addonAmt = 0;
+            if (addonsStr.includes('express pass')) addonAmt += 250;
+            if (addonsStr.includes('meal pass')) addonAmt += 180;
+            if (addonsStr.includes('locker pass')) addonAmt += 100;
+
+            let basePrice = Number(b.bill || 0) - addonAmt;
+            if (basePrice < 0) basePrice = 0;
+            // Admin gets 10% of base and 60% of addons
+            totalRevenue += (basePrice * 0.10) + (addonAmt * 0.60);
         });
         const subscribedOwners = owners.filter(o => o.subscription).length;
         totalRevenue += (subscribedOwners * 999);
 
-        res.json({ 
-            success: true, 
-            users, 
-            owners, 
-            parks, 
-            bookings, 
-            stats: { 
-                totalUsers: users.length, 
-                totalOwners: owners.length, 
-                totalParks: parks.length, 
-                totalBookings: bookings.length, 
-                totalRevenue 
-            } 
+        res.json({
+            success: true,
+            users,
+            owners,
+            parks,
+            bookings,
+            stats: {
+                totalUsers: users.length,
+                totalOwners: owners.length,
+                totalParks: parks.length,
+                totalBookings: bookings.length,
+                totalRevenue
+            }
         });
     } catch (err) {
         res.json({ success: false, message: err });
